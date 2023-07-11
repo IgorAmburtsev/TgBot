@@ -13,6 +13,15 @@ mongoose
 const channelBot = new TelegramBot(process.env.CHANNEL_BOT_TOKEN, { polling: true });
 const chatBot = new TelegramBot(process.env.CHAT_BOT_TOKEN, { polling: true });
 
+chatBot.setMyCommands([
+	{command: '/start', description: 'Начальное приветствие'},
+	{command: '/info', description: 'Получить информацию о пользователе'},
+	{command: '/game', description: 'Игра угадай цифру'},
+])
+
+
+
+
 /*
  * Канал UNDERWORLD
  */
@@ -50,9 +59,18 @@ const startChannelBot = async () => {
  */
 
 const startChatBot = () => {
-	chatBot.onText(/\/start/, async msg => {
+	chatBot.onText(/\/start/, msg => {
 		const chatId = msg.chat.id
-		await chatBot.sendMessage(chatId, 'Приветствую!', mainMenuOptions)
+		console.log(msg)
+		chatBot.sendMessage(chatId, 'Приветствую!', mainMenuOptions)
+	})
+
+	chatBot.on('callback_query', msg => {
+		chatBot.answerCallbackQuery(msg.id).then(() => {
+			if (msg.data == 'about') {
+			  chatBot.sendMessage(msg.message.chat.id, 'Tapped');
+			}
+		  })
 	})
 };
 
