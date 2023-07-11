@@ -19,9 +19,6 @@ chatBot.setMyCommands([
 	{command: '/game', description: 'Игра угадай цифру'},
 ])
 
-
-
-
 /*
  * Канал UNDERWORLD
  */
@@ -66,6 +63,7 @@ const startChatBot = () => {
 	})
 
 	chatBot.on('callback_query', msg => {
+		console.log(msg)
 		chatBot.answerCallbackQuery(msg.id).then(() => {
 			if (msg.data == 'about') {
 			  chatBot.sendMessage(msg.message.chat.id, 'Tapped');
