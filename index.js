@@ -1,33 +1,36 @@
-import TelegramBot from "node-telegram-bot-api";
-import "dotenv/config";
+import { chatBot, channelBot } from './utils/botsEntryPoint.js'
 import mongoose from "mongoose";
 import PortfolioModel from "./Models/PortfolioModel.js";
 import downloader from "./middleware/downloader.js";
 import { mainMenuOptions }  from "./middleware/inline_keyboard.js";
+import { menuRouter } from './middleware/menuRouter.js';
+import { mainText } from './utils/texts.js';
+import fs from 'fs'
 
 mongoose
 	.connect(process.env.MONGODB_CONNECT)
 	.then(() => console.log("db connected"))
 	.catch("db errored");
 
-const channelBot = new TelegramBot(process.env.CHANNEL_BOT_TOKEN, { polling: true });
-const chatBot = new TelegramBot(process.env.CHAT_BOT_TOKEN, { polling: true });
 
 chatBot.setMyCommands([
-	{command: '/start', description: 'Начальное приветствие'},
-	{command: '/info', description: 'Получить информацию о пользователе'},
-	{command: '/game', description: 'Игра угадай цифру'},
+	{
+		command: '/start', 
+		description: 'Открыть меню'
+	},
 ])
 
+
+
 /*
- * Канал UNDERWORLD
+ * --------------------------------	
+ * 		  Канал UNDERWORLD
+ * --------------------------------	
  */
 
-chatBot.getCustomEmojiStickers(['5897948935971933748']).then()
 
 const startChannelBot = async () => {
 	channelBot.on("channel_post", async (msg) => {
-		console.log(msg)
 		if (msg.photo && msg.caption.toLowerCase().includes("#арт")) {
 			const fileId = msg.photo[3].file_id;
 
@@ -52,26 +55,36 @@ const startChannelBot = async () => {
 };
 
 /*
- * Бот Underworld
+ * --------------------------------	
+ * 		   Бот UNDERWORLD
+ * --------------------------------	
  */
 
 const startChatBot = () => {
+
+	let current = 0
+
+	chatBot.on('message', msg => {
+	})
 	chatBot.onText(/\/start/, msg => {
 		const chatId = msg.chat.id
-		console.log(msg)
-		chatBot.sendMessage(chatId, 'Приветствую!', mainMenuOptions)
+		chatBot.sendMessage(chatId, mainText, mainMenuOptions)
 	})
 
 	chatBot.on('callback_query', msg => {
-		console.log(msg)
 		chatBot.answerCallbackQuery(msg.id).then(() => {
-			if (msg.data == 'about') {
-			  chatBot.sendMessage(msg.message.chat.id, 'Tapped');
-			}
+			menuRouter(msg.message.chat.id, msg.data)
 		  })
 	})
-};
 
+    // chatBot.on('callback_query', msg => {
+    //     chatBot.answerCallbackQuery(msg.id).then(() => {
+	// 		menuRouter(msg.message.chat.id, msg.data, current)
+	// 	return console.log('3213')	
+    //     })
+    // })
+
+};
 
 startChannelBot()
 startChatBot()
