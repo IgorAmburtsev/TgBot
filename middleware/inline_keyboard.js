@@ -1,4 +1,3 @@
-
 export const mainMenuOptions = {
     parse_mode: 'HTML',
     reply_markup: JSON.stringify({
@@ -12,10 +11,30 @@ export const mainMenuOptions = {
     })
 };
 
+export const adminMenuOptions = {
+    
+}
+
 export const portfolioMenuOptions = {
-    reply_markup: JSON.stringify({
+    first: {    
+        reply_markup:{
         inline_keyboard: [
-            [{text: "◀️", callback_data: "prev"},{text: "Первая страница", callback_data: "first"},{text: '▶️', callback_data: "next"}]
+            [{text: '▶️', callback_data: "next"}]
         ]
-    })
+    }},
+    normal: {    
+        inline_keyboard: [
+            [{text: "◀️", callback_data: "prev"},{text: "⏺", callback_data: "first"},{text: '▶️', callback_data: "next"}]
+        ]
+    },
+    hasOnlyPrev: {    
+        inline_keyboard: [
+            [{text: "◀️", callback_data: "prev"},{text: "⏺", callback_data: "first"}]
+        ]
+    },
+    hasOnlyNext: {    
+        inline_keyboard: [
+            [{text: '▶️', callback_data: "next"}]
+        ]
+    },
 };

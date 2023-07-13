@@ -6,12 +6,14 @@ import { mainMenuOptions }  from "./middleware/inline_keyboard.js";
 import { menuRouter } from './middleware/menuRouter.js';
 import { mainText } from './utils/texts.js';
 import fs from 'fs'
+import { getUrls } from './utils/urls.js';
 
 mongoose
 	.connect(process.env.MONGODB_CONNECT)
 	.then(() => console.log("db connected"))
 	.catch("db errored");
 
+getUrls()
 
 chatBot.setMyCommands([
 	{
@@ -31,17 +33,16 @@ chatBot.setMyCommands([
 
 const startChannelBot = async () => {
 	channelBot.on("channel_post", async (msg) => {
-		if (msg.photo && msg.caption.toLowerCase().includes("#арт")) {
+		if (msg.photo != undefined) {
 			const fileId = msg.photo[3].file_id;
-
-			const fileName = "new_meme";
+			const fileName = "new_memes";
 			const path = `./Portfolio/${fileName + ".jpg"}`;
 
 			channelBot.getFileLink(fileId).then(async (link) => {
-				downloader(link, fileName, path);
+				let url = await downloader(link, fileName, path);
 				try {
 					const post = new PortfolioModel({
-						pic: path,
+						pic: url,
 						style: "meme" + Math.floor(Math.random() * 100),
 						genre: "new meme 2",
 					});
@@ -62,10 +63,6 @@ const startChannelBot = async () => {
 
 const startChatBot = () => {
 
-	let current = 0
-
-	chatBot.on('message', msg => {
-	})
 	chatBot.onText(/\/start/, msg => {
 		const chatId = msg.chat.id
 		chatBot.sendMessage(chatId, mainText, mainMenuOptions)
@@ -76,14 +73,6 @@ const startChatBot = () => {
 			menuRouter(msg.message.chat.id, msg.data)
 		  })
 	})
-
-    // chatBot.on('callback_query', msg => {
-    //     chatBot.answerCallbackQuery(msg.id).then(() => {
-	// 		menuRouter(msg.message.chat.id, msg.data, current)
-	// 	return console.log('3213')	
-    //     })
-    // })
-
 };
 
 startChannelBot()
