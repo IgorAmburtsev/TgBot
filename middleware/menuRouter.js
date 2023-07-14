@@ -10,6 +10,9 @@ let current = 0;
 let currentFilesIds = [];
 let msgId = [];
 let files = getFiles()
+
+// console.log(files)
+
 let loadingId = "";
 
 export const menuRouter = (chatId, data) => {
@@ -19,7 +22,7 @@ export const menuRouter = (chatId, data) => {
 			chatBot.sendMediaGroup(chatId, files).then(
 				(msg) => (
 					chatBot.sendMessage(chatId, "Смотреть другие работы", portfolioMenuOptions.first).then((msg) => {
-						(msgId[0] = msg.message_id), console.log(msg);
+						(msgId[0] = msg.message_id);
 					}),
 					msg.map((data, index) => currentFilesIds.push(data.message_id))
 				)
@@ -51,7 +54,6 @@ export const menuRouter = (chatId, data) => {
 					}
 					chatBot.deleteMessage(chatId, msg.message_id);
 				}
-				console.log(current);
 			});
 		},
 		prev: () => {
@@ -69,7 +71,6 @@ export const menuRouter = (chatId, data) => {
 						message_id: msgId[0],
 					});
 				}
-				console.log(current);
 				// if (current == 0) {
 				// 	chatBot.editMessageReplyMarkup(portfolioMenuOptions.hasOnlyNext, {chat_id: chatId, message_id: msgId[0]})
 				// } else {

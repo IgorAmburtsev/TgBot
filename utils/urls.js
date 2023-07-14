@@ -6,7 +6,6 @@ export const getUrls = async () => {
 	const urlsArr = imgUrls.map((obj) => {
 		return obj.pic
 	});
-
-    console.log(urlsArr)
+	
 	fs.writeFileSync("./utils/urls.txt", urlsArr.join("; "), () => console.log("Четко все"));
 };

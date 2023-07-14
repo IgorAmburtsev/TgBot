@@ -17,6 +17,9 @@ export const getFiles = () => {
 		return obj;
 	});
 
+	const parsedArr = JSON.stringify(arrayOfObjects)
+	// console.log(parsedArr)
+
 	let size = 5;
 	let subarray = [];
 
@@ -25,7 +28,7 @@ export const getFiles = () => {
         subarray = subarray.concat(arrayOfObjects)
 		for (let i = 0; i < numOfMissing; i++) {
 			subarray.push({
-				type: "photo",
+type: "photo",
 				media: "https://i.ibb.co/r2JP8CD/photo-2023-07-13-17-21-57.jpg",
 			});
 		}
@@ -42,7 +45,7 @@ export const getFiles = () => {
 		}
 	}
 
-	console.log(subarray);
+	// console.log(subarray);
 
 	return subarray;
 };

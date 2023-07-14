@@ -5,8 +5,13 @@ import downloader from "./middleware/downloader.js";
 import { mainMenuOptions }  from "./middleware/inline_keyboard.js";
 import { menuRouter } from './middleware/menuRouter.js';
 import { mainText } from './utils/texts.js';
-import fs from 'fs'
+import fs, { createReadStream } from 'fs'
 import { getUrls } from './utils/urls.js';
+import imgur from 'imgur';
+import fileUrl from 'file-url';
+import imageToBase64 from 'image-to-base64';
+
+const client = new imgur.ImgurClient({clientId: process.env.IMGUR_ID})
 
 mongoose
 	.connect(process.env.MONGODB_CONNECT)
@@ -14,6 +19,8 @@ mongoose
 	.catch("db errored");
 
 getUrls()
+
+
 
 chatBot.setMyCommands([
 	{
@@ -24,32 +31,43 @@ chatBot.setMyCommands([
 
 
 
+const base64String = await imageToBase64('./Portfolio/new_memes.jpg').then(res => {return res})
+
+
 /*
  * --------------------------------	
  * 		  Канал UNDERWORLD
  * --------------------------------	
  */
 
+console.log()
+
 
 const startChannelBot = async () => {
 	channelBot.on("channel_post", async (msg) => {
 		if (msg.photo != undefined) {
-			const fileId = msg.photo[3].file_id;
+			const fileId = msg.photo[2].file_id;
 			const fileName = "new_memes";
 			const path = `./Portfolio/${fileName + ".jpg"}`;
-
+			
 			channelBot.getFileLink(fileId).then(async (link) => {
 				let url = await downloader(link, fileName, path);
-				try {
-					const post = new PortfolioModel({
-						pic: url,
-						style: "meme" + Math.floor(Math.random() * 100),
-						genre: "new meme 2",
-					});
-					const newModel = await post.save();
-				} catch (error) {
-					console.log(error);
-				}
+				const response = await client.upload({
+					image: base64String,
+					type: 'base64',
+				  });
+				  console.log(response.data);
+				
+				// try {
+				// 	const post = new PortfolioModel({
+				// 		pic: url,
+				// 		style: "meme" + Math.floor(Math.random() * 100),
+				// 		genre: "new meme 2",
+				// 	});
+				// 	const newModel = await post.save();
+				// } catch (error) {
+				// 	console.log(error);
+				// }
 			});
 		}
 	});
