@@ -44,7 +44,7 @@ type: "photo",
 		}
 	}
 
-	console.log(subarray);
+	// console.log(subarray);
 
 	return subarray;
 };
