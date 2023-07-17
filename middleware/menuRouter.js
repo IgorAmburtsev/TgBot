@@ -12,6 +12,7 @@ let msgId = [];
 let files = getFiles()
 // console.log(files)
 
+
 let loadingId = "";
 
 export const menuRouter = (chatId, data) => {
@@ -34,6 +35,7 @@ export const menuRouter = (chatId, data) => {
 			chatBot.sendMessage(chatId, "Загрузка...").then((msg) => {
 				if (current < files.length - 1) {
 					current++,
+					// console.log(current)
 						currentFilesIds.map((obj, index) => {
 							let filesToSend = files[current];
 							chatBot.editMessageMedia(filesToSend[index], { chat_id: chatId, message_id: obj });
@@ -57,11 +59,17 @@ export const menuRouter = (chatId, data) => {
 		},
 		prev: () => {
 			chatBot.sendMessage(chatId, "Загрузка...").then((msg) => {
+
 				if (current != 0) {
+					// console.log(current)
 					current--;
 					currentFilesIds.map((obj, index) => {
 						let filesToSend = files[current];
 						chatBot.editMessageMedia(filesToSend[index], { chat_id: chatId, message_id: obj });
+						chatBot.editMessageReplyMarkup(portfolioMenuOptions.normal, {
+							chat_id: chatId,
+							message_id: msgId[0],
+						});
 					});
 				}
 				if (current == 0) {
@@ -70,26 +78,8 @@ export const menuRouter = (chatId, data) => {
 						message_id: msgId[0],
 					});
 				}
-				// if (current == 0) {
-				// 	chatBot.editMessageReplyMarkup(portfolioMenuOptions.hasOnlyNext, {chat_id: chatId, message_id: msgId[0]})
-				// } else {
-				// 	current--;
-				// 	currentFilesIds.map((obj, index) => {
-				// 		let filesToSend = files[current];
-				// 		chatBot.editMessageMedia(filesToSend[index], {chat_id: chatId, message_id: obj})
-				// 	})
-				// }
 				chatBot.deleteMessage(chatId, msg.message_id);
 			});
-			// current !== 0
-			// 	? (current--,
-			// 	  currentFilesIds.map((obj, index) => {
-			// 			let filesToSend = files[current];
-			// 			chatBot
-			// 				.editMessageMedia(filesToSend[index], { chat_id: chatId, message_id: obj })
-			// 				.then(() => console.log(current));
-			// 	  }))
-			// 	: "";
 		},
 		first: () => {
 			current = 0;

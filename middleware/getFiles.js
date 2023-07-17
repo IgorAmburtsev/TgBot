@@ -17,18 +17,19 @@ export const getFiles = () => {
 		return obj;
 	});
 
-	// console.log(arrayOfObjects)
+	// console.log(arrayOfObjects, arrayOfObjects.length)
 
 	let size = 5;
 	let subarray = [];
 
-	if (arrayOfObjects.length < size) {
+	if (arrayOfObjects.length < Math.floor(arrayOfObjects.length / size)) {
 		const numOfMissing = size - arrayOfObjects.length;
+		console.log('Тут сработало')
         subarray = subarray.concat(arrayOfObjects)
 		for (let i = 0; i < numOfMissing; i++) {
 			subarray.push({
-type: "photo",
-				media: "https://i.ibb.co/r2JP8CD/photo-2023-07-13-17-21-57.jpg",
+				type: "photo",
+				media: "https://i.imgur.com/DcopMzE.jpg",
 			});
 		}
 	} else {
@@ -44,7 +45,7 @@ type: "photo",
 		}
 	}
 
-	console.log(subarray);
+	// console.log(subarray);
 
 	return subarray;
 };
