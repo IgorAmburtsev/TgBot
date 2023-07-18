@@ -1,11 +1,9 @@
-import { chatBot, channelBot } from './utils/botsEntryPoint.js'
-import mongoose from "mongoose";
+import { chatBot, channelBot } from './utils/bots_entry_point.js'
 import PortfolioModel from "./Models/PortfolioModel.js";
 import downloader from "./middleware/downloader.js";
 import { mainMenuOptions } from "./middleware/inline_keyboard.js";
-import { menuRouter } from './middleware/menuRouter.js';
+import { menuRouter } from './middleware/menu_router.js';
 import { mainText } from './utils/texts.js';
-import { getUrls } from './utils/urls.js';
 import imgur from 'imgur';
 import imageToBase64 from 'image-to-base64';
 import './utils/workers.js'
@@ -15,11 +13,6 @@ const client = new imgur.ImgurClient({ clientId: process.env.IMGUR_ID })
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
-
-
-
-// PortfolioModel.watch().on('change')
-
 
 
 const b64 = async (path) => {
