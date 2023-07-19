@@ -34,7 +34,7 @@ const OrderModel = new mongoose.Schema(
                 type: String,
             }  
 		},
-        orderAccept: {
+        orderStatus: {
             default: 'waiting',
             type: String
         }

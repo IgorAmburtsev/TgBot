@@ -28,6 +28,8 @@ OrderModel.watch().on('change', res => {
     console.log(res)
 })
 
+chatBot.on("polling_error", (msg) => console.log(msg));
+channelBot.on("polling_error", (msg) => console.log(msg));
 
 moment.locale('ru')
 // console.log(moment(obj.created_at).format('DD.MM.YYYY, kk:mm'))
