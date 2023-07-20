@@ -32,13 +32,9 @@ export const mainMenuOptions = (name) => {
 
 export const orderMenuOptions = {
 	mainOrderMenu: {
-        parse_mode: 'html',
+		parse_mode: "html",
 		reply_markup: {
-			inline_keyboard: [
-                [
-                    { text: "Сделать заказ", callback_data: "startOrder" }
-                ]
-            ],
+			inline_keyboard: [[{ text: "Сделать заказ", callback_data: "startOrder" }]],
 		},
 	},
 	numberOfPersonOption: {
@@ -53,7 +49,7 @@ export const orderMenuOptions = {
 	sizeOption: {
 		inline_keyboard: [
 			[
-				{ text: "Полноразмер", callback_data: "full" },
+				{ text: "Полноразмер", callback_data: "fullsize" },
 				{ text: "Халф", callback_data: "half" },
 				{ text: "Только голова", callback_data: "head" },
 			],
@@ -63,27 +59,37 @@ export const orderMenuOptions = {
 		inline_keyboard: [
 			[
 				{ text: "Скетч", callback_data: "sketch" },
-				{ text: "Скетч с покраской", callback_data: "sketchWithPaint" },
-				{ text: "Полноценный арт", callback_data: "art" },
+				{ text: "Скетч с покраской", callback_data: "sketchWColor" },
+				{ text: "Полноценный арт", callback_data: "fullArt" },
 			],
 		],
 	},
 	renderOption: {
 		inline_keyboard: [
-            [
-                { text: 'Рендер', callback_data: "renderPositive"},
-                { text: 'Без рендера', callback_data: 'renderNegative'},
-            ]
-        ],
+			[
+				{ text: "Рендер", callback_data: "render" },
+				{ text: "Без рендера", callback_data: "noRender" },
+			],
+		],
 	},
-    backgroundOption: {
-        inline_keyboard: [
-            [
-                { text: 'Только цвет', callback_data: "onlyColor"},
-                { text: 'Детализированный фон', callback_data: 'detailedBg'}
-            ]
-        ]
-    } 
+	backgroundOption: {
+		inline_keyboard: [
+			[
+				{ text: "Только цвет", callback_data: "backgroundColor" },
+				{ text: "Детализированный фон", callback_data: "backgroundDetailed" },
+			],
+		],
+	},
+	doneOrder: {
+		inline_keyboard: [[{ text: "Завершить оформление", callback_data: "done" }]],
+	},
+};
+
+export const buttonBack = {
+	parse_mode: "html",
+	reply_markup: {
+		inline_keyboard: [[{ text: "Вернуться", callback_data: "/start" }]],
+	},
 };
 
 export const portfolioMenuOptions = {

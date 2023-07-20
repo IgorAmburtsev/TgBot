@@ -8,9 +8,6 @@ const OrderModel = new mongoose.Schema(
         orderFromChatId: {
             type: Number,
         }, 
-		orderNum: {
-			type: Number,
-		},
 		orderReference: {
 			type: Array,
 		},

@@ -26,7 +26,13 @@ PortfolioModel.watch().on('change', res => {
 
 OrderModel.watch().on('change', res => {
     console.log(res)
-})
+    if (res.operationType === 'insert') {
+        chatBot.sendMessage(701913751, 'Новый заказ!')
+    }
+    if (res.operationType === 'update' && res.updateDescription.updatedFields.orderStatus !== 'rejected') {
+        console.log('Заказ принят!')
+    }
+ })
 
 chatBot.on("polling_error", (msg) => console.log(msg));
 channelBot.on("polling_error", (msg) => console.log(msg));
