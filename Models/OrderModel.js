@@ -14,6 +14,10 @@ const OrderModel = new mongoose.Schema(
         orderCaption: {
             type: String,
         },
+		orderUpdateFromAuthor: {
+			type: String,
+			default: ''
+		},
 		orderOptions: {
 			numberOfPerson: {
 				type: Number,

@@ -119,3 +119,25 @@ export const portfolioMenuOptions = {
 		inline_keyboard: [[{ text: "▶️", callback_data: "next" }]],
 	},
 };
+
+export const adminOptions = {
+	newOrder: {
+	parse_mode: 'html',		
+	reply_markup: {
+		inline_keyboard: [[{ text: "Посмотреть", callback_data: "viewOrder" }]],
+	}},
+	checkOrderWReference: {
+	parse_mode: 'html',		
+	reply_markup: {
+		inline_keyboard: [[{text: 'Посмотреть референсы', callback_data: "getReference"}],
+			[{ text: "✅", callback_data: "accept" },{text: "🛑", callback_data: "reject"}]
+		],
+	}},
+	checkOrderWOReference: {
+		parse_mode: 'html',		
+		reply_markup: {
+			inline_keyboard: [
+				[{ text: "✅", callback_data: "accept" },{text: "🛑", callback_data: "reject"}]
+			],
+		}}
+};

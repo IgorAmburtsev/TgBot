@@ -1,6 +1,6 @@
 import PortfolioModel from "../Models/PortfolioModel.js";
 import fs from "fs";
-import moment from "moment/moment.js";
+
 
 export const getUrls = async () => {
 	const imgUrls = await PortfolioModel.find({});

@@ -5,12 +5,6 @@ import imgbbUploader from "imgbb-uploader";
 import imgur from 'imgur';
 import imageToBase64 from 'image-to-base64';
 
-const client = new imgur.ImgurClient({ clientId: process.env.IMGUR_ID })
-
-const sleep = (ms) => {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
 const downloader = async (link, name, path) => {
 	const file = fs.createWriteStream(path);
 

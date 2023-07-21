@@ -29,7 +29,6 @@ const b64 = async (path) => {
 
 const startChannelBot = async () => {
 	channelBot.on("channel_post", async (msg) => {
-		console.log(msg)
 		if (msg.photo !== undefined && msg.caption !== undefined && msg.caption.toLowerCase().indexOf("#арт") >= 0) {
 			const fileId = msg.photo[msg.photo.length - 1].file_id;
 			const fileName = "new_memes";
@@ -78,12 +77,11 @@ const startChatBot = () => {
 		const chatId = msg.chat.id
 		const userName = msg.chat.username
 		chatBot.sendMessage(chatId, mainText, mainMenuOptions(userName))
-		// console.log(current, currentFilesIds, currentOrderMessageId, msgId)
 	})
 
 	chatBot.on('callback_query', msg => {
 		chatBot.answerCallbackQuery(msg.id).then(() => {
-			menuRouter(msg.message.chat.id, msg.data)
+			menuRouter(msg.message.chat.id, msg.data, msg.message.text, msg.from.username)
 			if (msg.data === '/start') {
 				chatBot.sendMessage(msg.message.chat.id, mainText, mainMenuOptions(msg.from.username))
 			}

@@ -1,11 +1,19 @@
 import { chatBot } from "../utils/bots_entry_point.js";
 import { getFiles } from "./get_files.js";
-import { mainMenuOptions, orderMenuOptions, portfolioMenuOptions, buttonBack } from "./inline_keyboard.js";
+import {
+	mainMenuOptions,
+	orderMenuOptions,
+	portfolioMenuOptions,
+	buttonBack,
+	adminOptions,
+} from "./inline_keyboard.js";
 import { orderText } from "../utils/texts.js";
 import imgur from "imgur";
 import imageToBase64 from "image-to-base64";
 import downloader from "./downloader.js";
 import OrderModel from "../Models/OrderModel.js";
+import fs from 'fs'
+import moment from "moment/moment.js";
 
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,14 +36,14 @@ let files = getFiles();
 let obj = {
 	orderFrom: "",
 	orderFromChatId: "",
-	orderReference: ["123", 312],
-	orderCaption: "2312312312",
+	orderReference: [],
+	orderCaption: "",
 	orderOptions: {
 		numberOfPerson: 0,
-		sizeOption: "312312",
-		completenessOption: "321321",
-		renderOption: "321312",
-		backgroundOption: "321321312",
+		sizeOption: "",
+		completenessOption: "",
+		renderOption: "",
+		backgroundOption: "",
 	},
 };
 
@@ -45,7 +53,7 @@ let currentOrderMessageId = [];
 let msgId = [];
 export let arrayOfMsges = [];
 
-export const menuRouter = (chatId, data, message) => {
+export const menuRouter = (chatId, data, message, user) => {
 	const actions = {
 		about: () => about(chatId, data),
 		portfolio: () => {
@@ -54,12 +62,10 @@ export const menuRouter = (chatId, data, message) => {
 			currentFilesIds = [];
 			chatBot.sendMediaGroup(chatId, files[0]).then(
 				(msg) => (
-					console.log(msg),
 					chatBot
 						.sendMessage(chatId, "Смотреть другие работы", portfolioMenuOptions.mainHasOnlyNext)
 						.then((msg) => {
 							msgId[0] = msg.message_id;
-							console.log(currentFilesIds);
 						}),
 					msg.map((data, index) => currentFilesIds.push(data.message_id))
 				)
@@ -68,7 +74,7 @@ export const menuRouter = (chatId, data, message) => {
 		ask: () => chatBot.sendMessage(chatId, data),
 		order: () => {
 			currentOrderMessageId = [];
-			console.log(currentOrderMessageId);
+			arrayOfMsges = []
 			chatBot.sendMessage(chatId, orderText.mainText, { parse_mode: "HTML" }).then((msg) => {
 				currentOrderMessageId.push(msg.message_id),
 					chatBot
@@ -79,7 +85,6 @@ export const menuRouter = (chatId, data, message) => {
 						)
 						.then((msg) => {
 							currentOrderMessageId[1] = msg.message_id;
-							// console.log(currentFilesIds);
 						});
 			});
 		},
@@ -87,7 +92,6 @@ export const menuRouter = (chatId, data, message) => {
 		next: () => {
 			chatBot.sendMessage(chatId, "Загрузка...").then((msg) => {
 				current++;
-				console.log(current);
 				let filesToSend = files[current];
 				if (current === 1) {
 					currentFilesIds.map((obj, index) => {
@@ -119,7 +123,6 @@ export const menuRouter = (chatId, data, message) => {
 		prev: () => {
 			chatBot.sendMessage(chatId, "Загрузка...").then((msg) => {
 				current--;
-				console.log(current);
 				let filesToSend = files[current];
 				if (current === files.length - 2) {
 					currentFilesIds.map((obj, index) => {
@@ -148,7 +151,6 @@ export const menuRouter = (chatId, data, message) => {
 			});
 		},
 		first: () => {
-			console.log(currentFilesIds);
 			current = 0;
 			currentFilesIds.map((obj, index) => {
 				let filesToSend = files[current];
@@ -157,7 +159,6 @@ export const menuRouter = (chatId, data, message) => {
 			chatBot.editMessageReplyMarkup(portfolioMenuOptions.hasOnlyNext, { chat_id: chatId, message_id: msgId[0] });
 		},
 		startOrder: () => {
-			console.log(currentOrderMessageId[0]);
 			chatBot
 				.editMessageText(orderText.firstQuestion, {
 					chat_id: chatId,
@@ -180,12 +181,11 @@ export const menuRouter = (chatId, data, message) => {
 				);
 		},
 		done: async () => {
-			await sleep(1000)
-			console.log(obj)
+			await sleep(1000);
 			try {
 				const order = new OrderModel({
-					orderFrom: obj.orderFrom,
-					orderFromChatId: obj.orderFromChatId,
+					orderFrom: '@' + user,
+					orderFromChatId: chatId,
 					orderReference: arrayOfMsges,
 					orderCaption: obj.orderCaption,
 					orderOptions: {
@@ -194,15 +194,63 @@ export const menuRouter = (chatId, data, message) => {
 						completenessOption: obj.orderOptions.completenessOption,
 						renderOption: obj.orderOptions.renderOption,
 						backgroundOption: obj.orderOptions.backgroundOption,
-					}
-				})
+					},
+				});
 				const newModel = await order.save();
-			} catch(err) {
-				console.log(err)
+			} catch (err) {
+				console.log(err);
 			}
 
-			chatBot.sendMessage(chatId, '<b>Готово!</b>\nЗаказ оформлен и отправлен на подтверждение, после чего вы получите уведомление в этом чате с подтверждением и реквизитами для оплаты', buttonBack)
+			chatBot.sendMessage(
+				chatId,
+				"<b>Готово!</b>\nЗаказ оформлен и отправлен на подтверждение, после чего вы получите уведомление в этом чате с подтверждением и реквизитами для оплаты",
+				buttonBack
+			);
 		},
+		viewOrder: async () => {
+			let messageUser = message.split("Id: ")[1];
+			const findOrder = await OrderModel.findById(messageUser).exec();
+			// await sleep(1000)
+			chatBot.sendMessage(
+				chatId,
+				`Заказ от ${findOrder.orderFrom}
+				\n<b>Количество персонажей:</b> ${findOrder.orderOptions.numberOfPerson}
+<b>Размер:</b> ${findOrder.orderOptions.sizeOption}
+<b>Степень законченности:</b> ${findOrder.orderOptions.completenessOption}
+<b>Рендер:</b> ${findOrder.orderOptions.renderOption}
+<b>Фон:</b> ${findOrder.orderOptions.backgroundOption}
+<b>Дополнительный комментарий:</b> 
+${findOrder.orderCaption}
+\n${findOrder.orderReference[0] == undefined ? "<b>Нет референсов</b>" : "<b>Есть референсы</b>"}
+				\n${moment(findOrder.created_at).format("DD.MM.YYYY, kk:mm")}
+Id: ${findOrder._id}`,
+				findOrder.orderReference[0] == undefined
+					? adminOptions.checkOrderWOReference
+					: adminOptions.checkOrderWReference
+			);
+		},
+		getReference: async () => {
+			let orderId = message.split("Id: ")[1];
+			const findOrder = await OrderModel.findById(orderId).exec();
+			chatBot.sendMediaGroup(chatId, findOrder.orderReference);
+		},
+		accept: () => {
+			chatBot.sendMessage(chatId, 'Напиши комментарий для обновления заказа')
+			let orderId = message.split('Id: ')[1]
+			chatBot.on('message', async (msg) => {
+				const findOrder = await OrderModel.findByIdAndUpdate({_id: orderId}, { orderUpdateFromAuthor: msg.text, orderStatus: 'accepted'});
+				chatBot.sendMessage(findOrder.orderFromChatId, 'Ваш заказ принят!\nКомментарий автора:\n' + msg.text)
+			})
+		},
+		reject: async () => {
+			chatBot.sendMessage(chatId, 'Напиши причину отмены заказа',)
+			let orderId = message.split('Id: ')[1]
+			chatBot.on('message', async (msg) => {
+				const findOrder = await OrderModel.findByIdAndUpdate({_id: orderId}, { orderUpdateFromAuthor: msg.text, orderStatus: 'rejected'});
+				let text = 'Заказ отклонен\n' + (msg.text === undefined ? '' : 'Причина: ' + msg.text)
+				chatBot.sendMessage(findOrder.orderFromChatId, text)
+			})
+		}
 	};
 
 	if (data === "one" || data === "two" || data === "three") {
@@ -292,16 +340,17 @@ export const menuRouter = (chatId, data, message) => {
 					message_id: currentOrderMessageId[0],
 					parse_mode: "HTML",
 				})
-				.then(() =>
-				chatBot.editMessageReplyMarkup(orderMenuOptions.doneOrder, {
-					chat_id: chatId,
-					message_id: currentOrderMessageId[0],
-				}),
-				chatBot.deleteMessage(chatId, currentOrderMessageId[1])
-			);
+				.then(
+					() =>
+						chatBot.editMessageReplyMarkup(orderMenuOptions.doneOrder, {
+							chat_id: chatId,
+							message_id: currentOrderMessageId[0],
+						}),
+					chatBot.deleteMessage(chatId, currentOrderMessageId[1])
+				);
 			chatBot.on("message", async (msg) => {
 				if (msg.photo) {
-					const fileName = "new_memes";
+					const fileName = "new_memes" + Math.floor(Math.random() * 100);
 					const path = `./Portfolio/${fileName + ".jpg"}`;
 
 					chatBot.getFileLink(msg.photo[msg.photo.length - 1].file_id).then(async (link) => {
@@ -315,17 +364,27 @@ export const menuRouter = (chatId, data, message) => {
 							type: "base64",
 						});
 
-						arrayOfMsges.push(uploadImage.data.link);
-						obj.orderFrom = '@'+ msg.from.username
-						obj.orderFromChatId = chatId
-						msg.text === undefined ? '' : obj.orderCaption = msg.text
+
+						let objectForMedia = {
+							type: 'photo',
+							media: uploadImage.data.link
+						}
+						arrayOfMsges.push(objectForMedia);
+						console.log(msg)
+						msg.caption === undefined ? "" : obj.orderCaption = msg.caption;
 					});
+
+					fs.unlink(path, err => {
+						if (err) {
+							throw err
+						}
+					})
+				} else {
+					obj.orderCaption = msg.caption
 				}
 			});
 		};
 	}
-
-
 
 	return actions[data]?.();
 };

@@ -23,7 +23,6 @@ export const getFiles = () => {
 	if (arrayOfObjects.length !== 1) {	
 		if (arrayOfObjects.length < Math.floor(arrayOfObjects.length / size)) {
 		const numOfMissing = size - arrayOfObjects.length;
-		console.log('Тут сработало')
         subarray = subarray.concat(arrayOfObjects)
 		for (let i = 0; i < numOfMissing; i++) {
 			subarray.push({
@@ -44,7 +43,7 @@ export const getFiles = () => {
 		}
 	}}
 
-	// console.log(subarray);
+
 
 	return subarray;
 };
