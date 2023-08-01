@@ -430,10 +430,13 @@ Id: ${findOrder._id}`,
 								type: "photo",
 								media: imgurLink,
 							};
-				
-							// Отправляем сообщение с изображением
-							console.log(photoObject);
-							msgesFromOrder.push(photoObject);
+
+							
+							arrayOfMsges.push(photoObject);
+							obj.orderFrom = '@'+ msg.from.username
+							obj.orderFromChatId = chatId
+							console.log(msg.text)
+							msg.text === undefined ? '' : obj[orderCaption] = msg.text
 				
 							fs.unlink(filePath);
 
