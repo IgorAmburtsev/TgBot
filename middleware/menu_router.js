@@ -1,35 +1,65 @@
 import { chatBot } from "../utils/bots_entry_point.js";
 import { getFiles } from "./get_files.js";
 import {
-	mainMenuOptions,
 	orderMenuOptions,
 	portfolioMenuOptions,
 	buttonBack,
 	adminOptions,
 } from "./inline_keyboard.js";
 import { orderText } from "../utils/texts.js";
-import imgur from "imgur";
-import imageToBase64 from "image-to-base64";
-import downloader from "./downloader.js";
 import OrderModel from "../Models/OrderModel.js";
-import fs from 'fs'
 import moment from "moment/moment.js";
+import axios from "axios";
+import { promises as fs } from "fs";
+import { createWriteStream } from "fs";
+import { FormData } from "node-fetch";
 
 const sleep = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const client = new imgur.ImgurClient({ clientId: process.env.IMGUR_ID });
+async function getFileLink(fileId) {
+	return await chatBot.getFileLink(fileId);
+}
 
-const b64 = async (path) => {
-	return await imageToBase64(path)
-		.then((res) => {
-			return res;
-		})
-		.catch((err) => {
-			throw err;
+// Функция для скачивания файла
+async function downloadFile(url, dest) {
+	const response = await axios.get(url, { responseType: "stream" });
+	const file = createWriteStream(dest);
+	response.data.pipe(file);
+	return new Promise((resolve, reject) => {
+		file.on("finish", resolve);
+		file.on("error", reject);
+	});
+}
+
+// Функция для кодирования файла в base64
+async function encodeFileToBase64(filePath) {
+	const data = await fs.readFile(filePath, { encoding: "base64" });
+	return data;
+}
+
+// Функция для загрузки файла в Imgur
+async function uploadToImgur(fileData) {
+	const clientId = process.env.IMGUR_ID;
+	const apiUrl = "https://api.imgur.com/3/image";
+	const data = new FormData();
+	data.append("image", fileData);
+	try {
+		const response = await axios.post(apiUrl, data, {
+			headers: {
+				Authorization: `Client-ID ${clientId}`,
+				"Content-Type": "multipart/form-data",
+			},
 		});
-};
+		return response.data.data.link;
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+
+
 
 let files = getFiles();
 
@@ -51,7 +81,9 @@ let current = 0;
 let currentFilesIds = [];
 let currentOrderMessageId = [];
 let msgId = [];
-export let arrayOfMsges = [];
+let arrayOfMsges = [];
+let msgesFromOrder = [];
+const messagePromises = [];
 
 export const menuRouter = (chatId, data, message, user) => {
 	const actions = {
@@ -74,7 +106,7 @@ export const menuRouter = (chatId, data, message, user) => {
 		ask: () => chatBot.sendMessage(chatId, data),
 		order: () => {
 			currentOrderMessageId = [];
-			arrayOfMsges = []
+			arrayOfMsges = [];
 			chatBot.sendMessage(chatId, orderText.mainText, { parse_mode: "HTML" }).then((msg) => {
 				currentOrderMessageId.push(msg.message_id),
 					chatBot
@@ -184,7 +216,7 @@ export const menuRouter = (chatId, data, message, user) => {
 			await sleep(1000);
 			try {
 				const order = new OrderModel({
-					orderFrom: '@' + user,
+					orderFrom: "@" + user,
 					orderFromChatId: chatId,
 					orderReference: arrayOfMsges,
 					orderCaption: obj.orderCaption,
@@ -235,22 +267,41 @@ Id: ${findOrder._id}`,
 			chatBot.sendMediaGroup(chatId, findOrder.orderReference);
 		},
 		accept: () => {
-			chatBot.sendMessage(chatId, 'Напиши комментарий для обновления заказа')
-			let orderId = message.split('Id: ')[1]
-			chatBot.on('message', async (msg) => {
-				const findOrder = await OrderModel.findByIdAndUpdate({_id: orderId}, { orderUpdateFromAuthor: msg.text, orderStatus: 'accepted'});
-				chatBot.sendMessage(findOrder.orderFromChatId, 'Ваш заказ принят!\nКомментарий автора:\n' + msg.text)
-			})
+			let messageHandled = false;
+			chatBot.sendMessage(chatId, "Напиши комментарий для обновления заказа");
+			let orderId = message.split("Id: ")[1];
+			const handleMessage = async (msg) => {
+				if (!messageHandled) {
+					messageHandled = true;
+					const findOrder = await OrderModel.findByIdAndUpdate(
+						{ _id: orderId },
+						{ orderUpdateFromAuthor: msg.text, orderStatus: "accepted" }
+					);
+					chatBot.sendMessage(
+						findOrder.orderFromChatId,
+						"Ваш заказ принят!\nКомментарий автора:\n" + msg.text
+					);
+				}
+			};
+			chatBot.on("message", handleMessage);
 		},
 		reject: async () => {
-			chatBot.sendMessage(chatId, 'Напиши причину отмены заказа',)
-			let orderId = message.split('Id: ')[1]
-			chatBot.on('message', async (msg) => {
-				const findOrder = await OrderModel.findByIdAndUpdate({_id: orderId}, { orderUpdateFromAuthor: msg.text, orderStatus: 'rejected'});
-				let text = 'Заказ отклонен\n' + (msg.text === undefined ? '' : 'Причина: ' + msg.text)
-				chatBot.sendMessage(findOrder.orderFromChatId, text)
-			})
-		}
+			let messageHandled = false;
+			chatBot.sendMessage(chatId, "Напиши причину отмены заказа");
+			let orderId = message.split("Id: ")[1];
+			const handleMessage = async (msg) => {
+				if (!messageHandled) {
+					messageHandled = true;
+					const findOrder = await OrderModel.findByIdAndUpdate(
+						{ _id: orderId },
+						{ orderUpdateFromAuthor: msg.text, orderStatus: "rejected" }
+					);
+					let text = "Заказ отклонен\n" + (msg.text === undefined ? "" : "Причина: " + msg.text);
+					chatBot.sendMessage(findOrder.orderFromChatId, text);
+				}
+			};
+			chatBot.on("message", handleMessage);
+		},
 	};
 
 	if (data === "one" || data === "two" || data === "three") {
@@ -331,6 +382,13 @@ Id: ${findOrder._id}`,
 	}
 
 	if (data === "backgroundColor" || data === "backgroundDetailed") {
+
+		let messageHandled = false;
+		let messagePromiseResolver; // Переменная для хранения функции resolve промиса
+		let messagePromise = new Promise((resolve) => {
+		  messagePromiseResolver = resolve;
+		});
+
 		actions[data] = async () => {
 			let textOfData = data === "backgroundColor" ? "Только цвет" : "Детализированный фон";
 			obj.orderOptions.backgroundOption = textOfData;
@@ -348,42 +406,50 @@ Id: ${findOrder._id}`,
 						}),
 					chatBot.deleteMessage(chatId, currentOrderMessageId[1])
 				);
-			chatBot.on("message", async (msg) => {
-				if (msg.photo) {
-					const fileName = "new_memes" + Math.floor(Math.random() * 100);
-					const path = `./Portfolio/${fileName + ".jpg"}`;
 
-					chatBot.getFileLink(msg.photo[msg.photo.length - 1].file_id).then(async (link) => {
-						let url = await downloader(link, fileName, path);
-					});
+				const handleMessage = async (msg) => {
+					if (msg.photo) {
+						try {
+							const fileName = `${Math.random().toString(36).substring(7)}.jpg`;
+							// Путь к папке Portfolio
+							const filePath = `Portfolio/${fileName}`;
+				
+							// Получаем ссылку на файл с помощью getFileLink
+							const fileLink = await getFileLink(msg.photo[msg.photo.length - 1].file_id);
+							// Скачиваем файл по заданному пути
+							await downloadFile(fileLink, filePath);
+				
+							// Кодируем файл в base64
+							const fileData = await encodeFileToBase64(filePath);
+				
+							// Загружаем файл в Imgur
+							const imgurLink = await uploadToImgur(fileData);
+				
+							// Создаем объект с полученной ссылкой на изображение
+							const photoObject = {
+								type: "photo",
+								media: imgurLink,
+							};
+				
+							// Отправляем сообщение с изображением
+							console.log(photoObject);
+							msgesFromOrder.push(photoObject);
+				
+							fs.unlink(filePath);
 
-					await sleep(1000);
-					await b64(path).then(async (res) => {
-						const uploadImage = await client.upload({
-							image: res,
-							type: "base64",
-						});
-
-
-						let objectForMedia = {
-							type: 'photo',
-							media: uploadImage.data.link
+							if (photoObject.media !== undefined) {
+								messagePromiseResolver();
+							}
+						} catch (err) {
+							throw new Error(err)
 						}
-						arrayOfMsges.push(objectForMedia);
-						console.log(msg)
-						msg.caption === undefined ? "" : obj.orderCaption = msg.caption;
-					});
+					}
+				}	
 
-					fs.unlink(path, err => {
-						if (err) {
-							throw err
-						}
-					})
-				} else {
-					obj.orderCaption = msg.caption
-				}
-			});
+			chatBot.on("message", handleMessage)
+			await messagePromise.then(() => chatBot.sendMessage(chatId, 'Все загрузилось'))
 		};
+		
 	}
 
 	return actions[data]?.();
